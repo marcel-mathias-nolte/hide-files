@@ -1,9 +1,17 @@
-# File visibilioty
+# File visibility icon
 
-Contao is an Open Source PHP Content Management System for people who want a
-professional website that is easy to maintain. Visit the [project website][1]
-for more information.
+## Deutsche Version
 
-Provide a toggable visibility icon in the file manager.
+Bietet ein Toggle-Icon für die Sichtbarkeit in der Dateiverwaltung.
+
+Die Filterung muss manuell in Templates oder Modulen erfolgen.
+
+Einige grundsätzliche Inhaltselemente, die dies beachten, sind bereits enthalten.
+
+## English version
+
+Provides a toggable visibility icon in the file manager.
 
 The filtering has to be done manually in templates and/or modules.
+
+Some basic content elements are already included.

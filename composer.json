@@ -2,7 +2,7 @@
     "name": "marcel-mathias-nolte/hide-files",
     "type": "contao-bundle",
     "description": "Provide a toggable visibility icon in the file manager and hook into image and gallery listing.",
-    "homepage": "https://marcel.live",
+    "homepage": "https://github.com/marcel-mathias-nolte",
     "license": "LGPL-3.0-or-later",
     "authors": [
         {
@@ -15,11 +15,11 @@
         },
         {
             "name": "Marcel Mathias Nolte",
-            "homepage": "https://marcel.live"
+            "homepage": "https://github.com/marcel-mathias-nolte"
         }
     ],
     "require": {
-        "php": "^5.6 || ^7.0",
+        "php": "^7.2",
         "contao/core-bundle": "^4.4",
         "contao-community-alliance/composer-plugin": "^2.4.0 || 3.*"
     },
