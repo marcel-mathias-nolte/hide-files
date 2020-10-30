@@ -38,7 +38,7 @@ class DcaCallbacks extends \Contao\Backend
 	{
 		if (\Contao\Input::get('cid'))
 		{
-			$this->toggleVisibility(\Contao\Input::get('cid'), (Contao\Input::get('state') == 1), (@func_get_arg(12) ?: null));
+			$this->toggleVisibility(\Contao\Input::get('cid'), (\Contao\Input::get('state') == 1), (@func_get_arg(12) ?: null));
 			$this->redirect($this->getReferer());
 		}
 

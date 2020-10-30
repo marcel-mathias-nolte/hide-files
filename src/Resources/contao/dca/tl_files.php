@@ -10,6 +10,8 @@
  * @license   LGPL-3.0-or-later
  */
 
+namespace MarcelMathiasNolte\ContaoHideFilesBundle;
+
 $GLOBALS['TL_DCA']['tl_files']['fields']['meta']['eval']['metaFields']['protected'] = 'maxlength="1"';
 $GLOBALS['TL_DCA']['tl_files']['fields']['hidden'] = array
 (
