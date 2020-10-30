@@ -150,4 +150,3 @@ class ContentDownload extends \Contao\ContentElement
 	}
 }
 
-class_alias(ContentDownload::class, 'ContentDownload');

@@ -11,3 +11,7 @@
  */
 
 $GLOBALS['TL_LANG']['MSC']['aw_protected'] = 'Geschützt';
+$GLOBALS['TL_LANG']['CTE']['mmn_download'] = $GLOBALS['TL_LANG']['CTE']['download'];
+$GLOBALS['TL_LANG']['CTE']['mmn_download'][0] .= ' (mit Schutz)';
+$GLOBALS['TL_LANG']['CTE']['mmn_downloads'] = $GLOBALS['TL_LANG']['CTE']['downloads'];
+$GLOBALS['TL_LANG']['CTE']['mmn_downloads'][0] .= ' (mit Schutz)';
