@@ -24,7 +24,7 @@ class ContentDownloads extends \Contao\ContentElement
 {
 	/**
 	 * Files object
-	 * @var \Contao\Collection|\Contao\FilesModel
+	 * @var Collection|\Contao\FilesModel
 	 */
 	protected $objFiles;
 
@@ -81,7 +81,7 @@ class ContentDownloads extends \Contao\ContentElement
 				{
                     $objFile = \Contao\FilesModel::findByPath($file);
                     if (!FE_USER_LOGGED_IN && $objFile->hidden) {
-                        throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+                        throw new \Contao\CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
                         return '';
                     }
                     \Contao\Controller::sendFileToBrowser($file, (bool) $this->inline);

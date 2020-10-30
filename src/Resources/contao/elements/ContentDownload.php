@@ -70,7 +70,7 @@ class ContentDownload extends \Contao\ContentElement
 			{
 
                 if (!FE_USER_LOGGED_IN && $objFile->hidden) {
-                    throw new \CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
+                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
                     return '';
                 }
 
