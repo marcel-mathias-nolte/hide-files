@@ -91,6 +91,10 @@ class ContentGallery extends \Contao\ContentElement
 				continue;
 			}
 
+			if ($objFiles->hidden) {
+
+            }
+
 			// Single files
 			if ($objFiles->type == 'file')
 			{
