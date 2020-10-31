@@ -22,318 +22,407 @@ use Contao\Model\Collection;
  */
 class ContentGallery extends \Contao\ContentElement
 {
-	/**
-	 * Files object
-	 * @var Collection|\Contao\FilesModel
-	 */
-	protected $objFiles;
+    /**
+     * Files object
+     * @var Collection|\Contao\FilesModel
+     */
+    protected $objFiles;
 
-	/**
-	 * Template
-	 * @var string
-	 */
-	protected $strTemplate = 'ce_gallery';
+    /**
+     * Template
+     * @var string
+     */
+    protected $strTemplate = 'ce_gallery';
 
-	/**
-	 * Return if there are no files
-	 *
-	 * @return string
-	 */
-	public function generate()
-	{
-		// Use the home directory of the current user as file source
-		if ($this->useHomeDir && FE_USER_LOGGED_IN)
-		{
-			$this->import(\Contao\FrontendUser::class, 'User');
+    /**
+     * Return if there are no files
+     *
+     * @return string
+     */
+    public function generate()
+    {
+        // Use the home directory of the current user as file source
+        if ($this->useHomeDir && FE_USER_LOGGED_IN)
+        {
+            $this->import(\Contao\FrontendUser::class, 'User');
 
-			if ($this->User->assignDir && $this->User->homeDir)
-			{
-				$this->multiSRC = array($this->User->homeDir);
-			}
-		}
-		else
-		{
-			$this->multiSRC = \Contao\StringUtil::deserialize($this->multiSRC);
-		}
+            if ($this->User->assignDir && $this->User->homeDir)
+            {
+                $this->multiSRC = array($this->User->homeDir);
+            }
+        }
+        else
+        {
+            $this->multiSRC = \Contao\StringUtil::deserialize($this->multiSRC);
+        }
 
-		// Return if there are no files
-		if (empty($this->multiSRC) || !\is_array($this->multiSRC))
-		{
-			return '';
-		}
+        // Return if there are no files
+        if (empty($this->multiSRC) || !\is_array($this->multiSRC))
+        {
+            return '';
+        }
 
-		// Get the file entries from the database
-		$this->objFiles = \Contao\FilesModel::findMultipleByUuids($this->multiSRC);
+        // Get the file entries from the database
+        $this->objFiles = \Contao\FilesModel::findMultipleByUuids($this->multiSRC);
 
-		if ($this->objFiles === null)
-		{
-			return '';
-		}
+        if ($this->objFiles === null)
+        {
+            return '';
+        }
 
-		return parent::generate();
-	}
+        return parent::generate();
+    }
 
-	/**
-	 * Generate the content element
-	 */
-	protected function compile()
-	{
-		$images = array();
-		$auxDate = array();
-		$objFiles = $this->objFiles;
+    protected function getNewSrc(\Contao\FilesModel $objFile) {
+        static $hideMode;
+        static $watermarkFile;
+        if (!$hideMode) {
+            global $objPage;
+            $objRootPage = \Contao\PageModel::findByPk($objPage->rootId);
+            $hideMode = $objRootPage != null && $objRootPage->mmn_hide_files_mode != '' ? $objRootPage->mmn_hide_files_mode : 'hide';
+            if ($objRootPage->mmn_hide_files_overlay_custom) {
+                $objWatermarkFile = \Contao\FilesModel::findByUuid($objRootPage->mmn_hide_files_overlay_image);
+                if ($objWatermarkFile != null) {
+                    $watermarkFile = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/' . $objWatermarkFile->path;
+                    if (!file_exists($watermarkFile)) {
+                        $watermarkFile = __DIR__ . '/../assets/lock.png';
+                    }
+                } else {
+                    $watermarkFile = __DIR__ . '/../assets/lock.png';
+                }
+            }
+            elseif ($objRootPage->mmn_hide_files_overlay_none) {
+                $watermarkFile = '';
+            }
+            else {
+                $watermarkFile = __DIR__ . '/../assets/lock.png';
+            }
+        }
+        if (!FE_USER_LOGGED_IN && $objFile->hidden) {
+            if ($hideMode == 'blur' && extension_loaded('imagick')) {
+                set_time_limit(0);
+                $src = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/' . $objFile->path;
+                $ext = $objFile->extension;
+                $target_dir = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/assets/images/hide-files';
+                if (!is_dir($target_dir)) {
+                    mkdir($target_dir);
+                }
+                $newsrc = md5($objFile->path) . '.' . $ext;
+                $abs = $target_dir . '/' . $newsrc;
+                if (!file_exists($abs) || filemtime($abs) != filemtime($src)) {
+                    $imagick = new \Imagick($src);
+                    $imagick->gaussianBlurImage(80, 25);
+                    $s_height = $imagick->getImageHeight();
+                    $s_width = $imagick->getImageWidth();
+                    if ($watermarkFile) {
+                        $watermark = new \Imagick($watermarkFile);
+                        $w_height = $watermark->getImageHeight();
+                        $w_width = $watermark->getImageWidth();
+                        if ($s_height > $s_width) {
+                            $n_width = $s_width / 2;
+                            $n_height = $n_width * $w_height / $w_width;
+                            $n_pos_x = $s_width / 4;
+                            $n_pos_y = $s_height / 2 - $n_height / 2;
+                        } else {
+                            $n_height = $s_height / 2;
+                            $n_width = $w_width * $n_height / $w_height;
+                            $n_pos_x = $s_width / 2 - $n_width / 2;
+                            $n_pos_y = $s_height / 4;
+                        }
+                        $watermark->resizeImage($n_width, $n_height, \Imagick::FILTER_LANCZOS, 1);
+                        $imagick->compositeImage($watermark, Imagick::COMPOSITE_DEFAULT, $n_pos_x, $n_pos_y);
+                    }
+                    $imagick->flattenImages();
+                    file_put_contents($abs, $imagick->getImageBlob());
+                    $imagick->destroy();
+                    if ($watermarkFile) {
+                        $watermark->destroy();
+                    }
+                }
+                return 'assets/images/hide-files/' . $newsrc;
+            } else {
+                return false;
+            }
+        }
+        return $objFile->path;
+    }
 
-		// Get all images
-		while ($objFiles->next())
-		{
-			// Continue if the files has been processed or does not exist
-			if (isset($images[$objFiles->path]) || !file_exists(\Contao\System::getContainer()->getParameter('kernel.project_dir') . '/' . $objFiles->path))
-			{
-				continue;
-			}
+    /**
+     * Generate the content element
+     */
+    protected function compile()
+    {
+        $images = array();
+        $auxDate = array();
+        $objFiles = $this->objFiles;
 
-			if ($objFiles->hidden) {
-
+        // Get all images
+        while ($objFiles->next())
+        {
+            // Continue if the files has been processed or does not exist
+            if (isset($images[$objFiles->path]) || !file_exists(\Contao\System::getContainer()->getParameter('kernel.project_dir') . '/' . $objFiles->path))
+            {
+                continue;
             }
 
-			// Single files
-			if ($objFiles->type == 'file')
-			{
-				$objFile = new \Contao\File($objFiles->path);
+            // Single files
+            if ($objFiles->type == 'file')
+            {
+                $newPath = $this->getNewSrc($objFiles);;
+                if (!$newPath) {
+                    continue;
+                } elseif ($newPath != $objFiles->path) {
+                    $objFiles->path = $newPath;
+                }
 
-				if (!$objFile->isImage)
-				{
-					continue;
-				}
+                $objFile = new \Contao\File($objFiles->path);
 
-				// Add the image
-				$images[$objFiles->path] = array
-				(
-					'id'         => $objFiles->id,
-					'uuid'       => $objFiles->uuid,
-					'name'       => $objFile->basename,
-					'singleSRC'  => $objFiles->path,
-					'filesModel' => $objFiles->current()
-				);
+                if (!$objFile->isImage)
+                {
+                    continue;
+                }
 
-				$auxDate[] = $objFile->mtime;
-			}
+                // Add the image
+                $images[$objFiles->path] = array
+                (
+                    'id'         => $objFiles->id,
+                    'uuid'       => $objFiles->uuid,
+                    'name'       => $objFile->basename,
+                    'singleSRC'  => $objFiles->path,
+                    'filesModel' => $objFiles->current(),
+                    'isHidden'   => !FE_USER_LOGGED_IN && $objFiles->hidden
+                );
 
-			// Folders
-			else
-			{
-				$objSubfiles = \Contao\FilesModel::findByPid($objFiles->uuid, array('order' => 'name'));
+                $auxDate[] = $objFile->mtime;
+            }
 
-				if ($objSubfiles === null)
-				{
-					continue;
-				}
+            // Folders
+            else
+            {
+                $objSubfiles = \Contao\FilesModel::findByPid($objFiles->uuid, array('order' => 'name'));
 
-				while ($objSubfiles->next())
-				{
-					// Skip subfolders
-					if ($objSubfiles->type == 'folder')
-					{
-						continue;
-					}
+                if ($objSubfiles === null)
+                {
+                    continue;
+                }
 
-					$objFile = new \Contao\File($objSubfiles->path);
+                while ($objSubfiles->next())
+                {
+                    // Skip subfolders
+                    if ($objSubfiles->type == 'folder')
+                    {
+                        continue;
+                    }
 
-					if (!$objFile->isImage)
-					{
-						continue;
-					}
+                    $newPath = $this->getNewSrc($objSubfiles);;
+                    if (!$newPath) {
+                        continue;
+                    } elseif ($newPath != $objSubfiles->path) {
+                        $objSubfiles->path = $newPath;
+                    }
 
-					// Add the image
-					$images[$objSubfiles->path] = array
-					(
-						'id'         => $objSubfiles->id,
-						'uuid'       => $objSubfiles->uuid,
-						'name'       => $objFile->basename,
-						'singleSRC'  => $objSubfiles->path,
-						'filesModel' => $objSubfiles->current()
-					);
+                    $objFile = new \Contao\File($objSubfiles->path);
 
-					$auxDate[] = $objFile->mtime;
-				}
-			}
-		}
+                    if (!$objFile->isImage)
+                    {
+                        continue;
+                    }
 
-		// Sort array
-		switch ($this->sortBy)
-		{
-			default:
-			case 'name_asc':
-				uksort($images, 'basename_natcasecmp');
-				break;
+                    // Add the image
+                    $images[$objSubfiles->path] = array
+                    (
+                        'id'         => $objSubfiles->id,
+                        'uuid'       => $objSubfiles->uuid,
+                        'name'       => $objFile->basename,
+                        'singleSRC'  => $objSubfiles->path,
+                        'filesModel' => $objSubfiles->current(),
+                        'isHidden'   => !FE_USER_LOGGED_IN && $objSubfiles->hidden
+                    );
 
-			case 'name_desc':
-				uksort($images, 'basename_natcasercmp');
-				break;
+                    $auxDate[] = $objFile->mtime;
+                }
+            }
+        }
 
-			case 'date_asc':
-				array_multisort($images, SORT_NUMERIC, $auxDate, SORT_ASC);
-				break;
+        // Sort array
+        switch ($this->sortBy)
+        {
+            default:
+            case 'name_asc':
+                uksort($images, 'basename_natcasecmp');
+                break;
 
-			case 'date_desc':
-				array_multisort($images, SORT_NUMERIC, $auxDate, SORT_DESC);
-				break;
+            case 'name_desc':
+                uksort($images, 'basename_natcasercmp');
+                break;
 
-			// Deprecated since Contao 4.0, to be removed in Contao 5.0
-			case 'meta':
-				@trigger_error('The "meta" key in ContentGallery::compile() has been deprecated and will no longer work in Contao 5.0.', E_USER_DEPRECATED);
-				// no break
+            case 'date_asc':
+                array_multisort($images, SORT_NUMERIC, $auxDate, SORT_ASC);
+                break;
 
-			case 'custom':
-				if ($this->orderSRC)
-				{
-					$tmp = \Contao\StringUtil::deserialize($this->orderSRC);
+            case 'date_desc':
+                array_multisort($images, SORT_NUMERIC, $auxDate, SORT_DESC);
+                break;
 
-					if (!empty($tmp) && \is_array($tmp))
-					{
-						// Remove all values
-						$arrOrder = array_map(static function () {}, array_flip($tmp));
+            // Deprecated since Contao 4.0, to be removed in Contao 5.0
+            case 'meta':
+                @trigger_error('The "meta" key in ContentGallery::compile() has been deprecated and will no longer work in Contao 5.0.', E_USER_DEPRECATED);
+            // no break
 
-						// Move the matching elements to their position in $arrOrder
-						foreach ($images as $k=>$v)
-						{
-							if (\array_key_exists($v['uuid'], $arrOrder))
-							{
-								$arrOrder[$v['uuid']] = $v;
-								unset($images[$k]);
-							}
-						}
+            case 'custom':
+                if ($this->orderSRC)
+                {
+                    $tmp = \Contao\StringUtil::deserialize($this->orderSRC);
 
-						// Append the left-over images at the end
-						if (!empty($images))
-						{
-							$arrOrder = array_merge($arrOrder, array_values($images));
-						}
+                    if (!empty($tmp) && \is_array($tmp))
+                    {
+                        // Remove all values
+                        $arrOrder = array_map(static function () {}, array_flip($tmp));
 
-						// Remove empty (unreplaced) entries
-						$images = array_values(array_filter($arrOrder));
-						unset($arrOrder);
-					}
-				}
-				break;
+                        // Move the matching elements to their position in $arrOrder
+                        foreach ($images as $k=>$v)
+                        {
+                            if (\array_key_exists($v['uuid'], $arrOrder))
+                            {
+                                $arrOrder[$v['uuid']] = $v;
+                                unset($images[$k]);
+                            }
+                        }
 
-			case 'random':
-				shuffle($images);
-				$this->Template->isRandomOrder = true;
-				break;
-		}
+                        // Append the left-over images at the end
+                        if (!empty($images))
+                        {
+                            $arrOrder = array_merge($arrOrder, array_values($images));
+                        }
 
-		$images = array_values($images);
+                        // Remove empty (unreplaced) entries
+                        $images = array_values(array_filter($arrOrder));
+                        unset($arrOrder);
+                    }
+                }
+                break;
 
-		// Limit the total number of items (see #2652)
-		if ($this->numberOfItems > 0)
-		{
-			$images = \array_slice($images, 0, $this->numberOfItems);
-		}
+            case 'random':
+                shuffle($images);
+                $this->Template->isRandomOrder = true;
+                break;
+        }
 
-		$offset = 0;
-		$total = \count($images);
-		$limit = $total;
+        $images = array_values($images);
 
-		// Paginate the result of not randomly sorted (see #8033)
-		if ($this->perPage > 0 && $this->sortBy != 'random')
-		{
-			// Get the current page
-			$id = 'page_g' . $this->id;
-			$page = \Contao\Input::get($id) ?? 1;
+        // Limit the total number of items (see #2652)
+        if ($this->numberOfItems > 0)
+        {
+            $images = \array_slice($images, 0, $this->numberOfItems);
+        }
 
-			// Do not index or cache the page if the page number is outside the range
-			if ($page < 1 || $page > max(ceil($total/$this->perPage), 1))
-			{
-				throw new PageNotFoundException('Page not found: ' . \Contao\Environment::get('uri'));
-			}
+        $offset = 0;
+        $total = \count($images);
+        $limit = $total;
 
-			// Set limit and offset
-			$offset = ($page - 1) * $this->perPage;
-			$limit = min($this->perPage + $offset, $total);
+        // Paginate the result of not randomly sorted (see #8033)
+        if ($this->perPage > 0 && $this->sortBy != 'random')
+        {
+            // Get the current page
+            $id = 'page_g' . $this->id;
+            $page = \Contao\Input::get($id) ?? 1;
 
-			$objPagination = new \Contao\Pagination($total, $this->perPage, \Contao\Config::get('maxPaginationLinks'), $id);
-			$this->Template->pagination = $objPagination->generate("\n  ");
-		}
+            // Do not index or cache the page if the page number is outside the range
+            if ($page < 1 || $page > max(ceil($total/$this->perPage), 1))
+            {
+                throw new PageNotFoundException('Page not found: ' . \Contao\Environment::get('uri'));
+            }
 
-		$rowcount = 0;
-		$colwidth = floor(100/$this->perRow);
-		$strLightboxId = 'lb' . $this->id;
-		$body = array();
+            // Set limit and offset
+            $offset = ($page - 1) * $this->perPage;
+            $limit = min($this->perPage + $offset, $total);
 
-		// Rows
-		for ($i=$offset; $i<$limit; $i+=$this->perRow)
-		{
-			$class_tr = '';
+            $objPagination = new \Contao\Pagination($total, $this->perPage, \Contao\Config::get('maxPaginationLinks'), $id);
+            $this->Template->pagination = $objPagination->generate("\n  ");
+        }
 
-			if ($rowcount == 0)
-			{
-				$class_tr .= ' row_first';
-			}
+        $rowcount = 0;
+        $colwidth = floor(100/$this->perRow);
+        $strLightboxId = 'lb' . $this->id;
+        $body = array();
 
-			if (($i + $this->perRow) >= $limit)
-			{
-				$class_tr .= ' row_last';
-			}
+        // Rows
+        for ($i=$offset; $i<$limit; $i+=$this->perRow)
+        {
+            $class_tr = '';
 
-			$class_eo = (($rowcount % 2) == 0) ? ' even' : ' odd';
+            if ($rowcount == 0)
+            {
+                $class_tr .= ' row_first';
+            }
 
-			// Columns
-			for ($j=0; $j<$this->perRow; $j++)
-			{
-				$class_td = '';
+            if (($i + $this->perRow) >= $limit)
+            {
+                $class_tr .= ' row_last';
+            }
 
-				if ($j == 0)
-				{
-					$class_td .= ' col_first';
-				}
+            $class_eo = (($rowcount % 2) == 0) ? ' even' : ' odd';
 
-				if ($j == ($this->perRow - 1))
-				{
-					$class_td .= ' col_last';
-				}
+            // Columns
+            for ($j=0; $j<$this->perRow; $j++)
+            {
+                $class_td = '';
 
-				$objCell = new \stdClass();
-				$key = 'row_' . $rowcount . $class_tr . $class_eo;
+                if ($j == 0)
+                {
+                    $class_td .= ' col_first';
+                }
 
-				// Empty cell
-				if (($j+$i) >= $limit || !\is_array($images[($i+$j)]))
-				{
-					$objCell->colWidth = $colwidth . '%';
-					$objCell->class = 'col_' . $j . $class_td;
-				}
-				else
-				{
-					// Add size and margin
-					$images[($i+$j)]['size'] = $this->size;
-					$images[($i+$j)]['imagemargin'] = $this->imagemargin;
-					$images[($i+$j)]['fullsize'] = $this->fullsize;
+                if ($j == ($this->perRow - 1))
+                {
+                    $class_td .= ' col_last';
+                }
 
-					$this->addImageToTemplate($objCell, $images[($i+$j)], null, $strLightboxId, $images[($i+$j)]['filesModel']);
+                $objCell = new \stdClass();
+                $key = 'row_' . $rowcount . $class_tr . $class_eo;
 
-					// Add column width and class
-					$objCell->colWidth = $colwidth . '%';
-					$objCell->class = 'col_' . $j . $class_td;
-				}
+                // Empty cell
+                if (($j+$i) >= $limit || !\is_array($images[($i+$j)]))
+                {
+                    $objCell->colWidth = $colwidth . '%';
+                    $objCell->class = 'col_' . $j . $class_td;
+                }
+                else
+                {
+                    // Add size and margin
+                    $images[($i+$j)]['size'] = $this->size;
+                    $images[($i+$j)]['imagemargin'] = $this->imagemargin;
+                    $images[($i+$j)]['fullsize'] = $this->fullsize;
 
-				$body[$key][$j] = $objCell;
-			}
+                    $this->addImageToTemplate($objCell, $images[($i+$j)], null, $strLightboxId, $images[($i+$j)]['filesModel']);
+                    if ($images[($i+$j)]['isHidden']) {
+                        $objCell->href = $objCell->imageHref = '{{link_url::login}}';
+                    }
 
-			++$rowcount;
-		}
+                    // Add column width and class
+                    $objCell->colWidth = $colwidth . '%';
+                    $objCell->class = 'col_' . $j . $class_td;
+                }
 
-		$request = System::getContainer()->get('request_stack')->getCurrentRequest();
+                $body[$key][$j] = $objCell;
+            }
 
-		// Always use the default template in the back end
-		if ($request && System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest($request))
-		{
-			$this->galleryTpl = '';
-		}
+            ++$rowcount;
+        }
 
-		$objTemplate = new \Contao\FrontendTemplate($this->galleryTpl ?: 'gallery_default');
-		$objTemplate->setData($this->arrData);
-		$objTemplate->body = $body;
-		$objTemplate->headline = $this->headline; // see #1603
+        $request = \Contao\System::getContainer()->get('request_stack')->getCurrentRequest();
 
-		$this->Template->images = $objTemplate->parse();
-	}
+        // Always use the default template in the back end
+        if ($request && \Contao\System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest($request))
+        {
+            $this->galleryTpl = '';
+        }
+
+        $objTemplate = new \Contao\FrontendTemplate($this->galleryTpl ?: 'gallery_default');
+        $objTemplate->setData($this->arrData);
+        $objTemplate->body = $body;
+        $objTemplate->headline = $this->headline; // see #1603
+
+        $this->Template->images = $objTemplate->parse();
+    }
 }

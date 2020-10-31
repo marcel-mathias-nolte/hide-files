@@ -149,4 +149,45 @@ class DcaCallbacks extends \Contao\Backend
 
 		$objVersions->create();
 	}
+
+    public function setSingleSrcFlags($varValue, \Contao\DataContainer $dc)
+    {
+        if ($dc->activeRecord)
+        {
+            switch ($dc->activeRecord->type)
+            {
+                case 'mmn_image':
+                    $GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['extensions'] = \Contao\Config::get('validImageTypes');
+                    break;
+
+                case 'mmn_download':
+                    $GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['extensions'] = \Contao\Config::get('allowedDownload');
+                    break;
+            }
+        }
+
+        return $varValue;
+    }
+
+
+    public function setMultiSrcFlags($varValue, \Contao\DataContainer $dc)
+    {
+        if ($dc->activeRecord)
+        {
+            switch ($dc->activeRecord->type)
+            {
+                case 'mmn_gallery':
+                    $GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['isGallery'] = true;
+                    $GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['extensions'] = \Contao\Config::get('validImageTypes');
+                    break;
+
+                case 'mmn_downloads':
+                    $GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['isDownloads'] = true;
+                    $GLOBALS['TL_DCA'][$dc->table]['fields'][$dc->field]['eval']['extensions'] = \Contao\Config::get('allowedDownload');
+                    break;
+            }
+        }
+
+        return $varValue;
+    }
 }

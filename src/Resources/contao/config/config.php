@@ -26,6 +26,8 @@ if (!function_exists('mmn_insert_after')) {
 // Content elements
 mmn_insert_after($GLOBALS['TL_CTE']['files'], 'download', 'mmn_download', 'MarcelMathiasNolte\ContaoHideFilesBundle\ContentDownload');
 mmn_insert_after($GLOBALS['TL_CTE']['files'], 'downloads', 'mmn_downloads', 'MarcelMathiasNolte\ContaoHideFilesBundle\ContentDownloads');
+mmn_insert_after($GLOBALS['TL_CTE']['media'], 'image', 'mmn_image', 'MarcelMathiasNolte\ContaoHideFilesBundle\ContentImage');
+mmn_insert_after($GLOBALS['TL_CTE']['media'], 'gallery', 'mmn_gallery', 'MarcelMathiasNolte\ContaoHideFilesBundle\ContentGallery');
 
 /*
 (

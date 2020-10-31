@@ -15,3 +15,7 @@ $GLOBALS['TL_LANG']['CTE']['mmn_download'] = $GLOBALS['TL_LANG']['CTE']['downloa
 $GLOBALS['TL_LANG']['CTE']['mmn_download'][0] .= ' (mit Schutz)';
 $GLOBALS['TL_LANG']['CTE']['mmn_downloads'] = $GLOBALS['TL_LANG']['CTE']['downloads'];
 $GLOBALS['TL_LANG']['CTE']['mmn_downloads'][0] .= ' (mit Schutz)';
+$GLOBALS['TL_LANG']['CTE']['mmn_image'] = $GLOBALS['TL_LANG']['CTE']['image'];
+$GLOBALS['TL_LANG']['CTE']['mmn_image'][0] .= ' (mit Schutz)';
+$GLOBALS['TL_LANG']['CTE']['mmn_gallery'] = $GLOBALS['TL_LANG']['CTE']['gallery'];
+$GLOBALS['TL_LANG']['CTE']['mmn_gallery'][0] .= ' (mit Schutz)';
