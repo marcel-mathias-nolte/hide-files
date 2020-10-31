@@ -73,7 +73,7 @@ class ContentGallery extends \Contao\ContentElement
         return parent::generate();
     }
 
-    protected function getNewSrc(\Contao\FilesModel $objFile) {
+    protected function getNewSrc($objFile) {
         static $hideMode;
         static $watermarkFile;
         if (!$hideMode) {
@@ -130,7 +130,7 @@ class ContentGallery extends \Contao\ContentElement
                             $n_pos_y = $s_height / 4;
                         }
                         $watermark->resizeImage($n_width, $n_height, \Imagick::FILTER_LANCZOS, 1);
-                        $imagick->compositeImage($watermark, Imagick::COMPOSITE_DEFAULT, $n_pos_x, $n_pos_y);
+                        $imagick->compositeImage($watermark, \Imagick::COMPOSITE_DEFAULT, $n_pos_x, $n_pos_y);
                     }
                     $imagick->flattenImages();
                     file_put_contents($abs, $imagick->getImageBlob());
