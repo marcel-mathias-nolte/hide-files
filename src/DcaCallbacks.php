@@ -217,48 +217,54 @@ class DcaCallbacks extends \Contao\Backend
             }
         }
         if (!FE_USER_LOGGED_IN && $objFile->hidden) {
-            if ($hideMode == 'blur' && extension_loaded('imagick')) {
-                set_time_limit(0);
-                $src = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/' . $objFile->path;
-                $ext = $objFile->extension;
-                $target_dir = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/assets/images/hide-files';
-                if (!is_dir($target_dir)) {
-                    mkdir($target_dir);
-                }
-                $newsrc = md5($objFile->path) . '.' . $ext;
-                $abs = $target_dir . '/' . $newsrc;
-                if (!file_exists($abs) || filemtime($abs) != filemtime($src)) {
-                    $imagick = new \Imagick($src);
-                    $imagick->gaussianBlurImage(80, 25);
-                    $s_height = $imagick->getImageHeight();
-                    $s_width = $imagick->getImageWidth();
-                    if ($watermarkFile) {
-                        $watermark = new \Imagick($watermarkFile);
-                        $w_height = $watermark->getImageHeight();
-                        $w_width = $watermark->getImageWidth();
-                        if ($s_height > $s_width) {
-                            $n_width = $s_width / 2;
-                            $n_height = $n_width * $w_height / $w_width;
-                            $n_pos_x = $s_width / 4;
-                            $n_pos_y = $s_height / 2 - $n_height / 2;
-                        } else {
-                            $n_height = $s_height / 2;
-                            $n_width = $w_width * $n_height / $w_height;
-                            $n_pos_x = $s_width / 2 - $n_width / 2;
-                            $n_pos_y = $s_height / 4;
+            if ($hideMode == 'blur' && extension_loaded('imagick')) {#
+                try {
+                    set_time_limit(0);
+                    $src = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/' . $objFile->path;
+                    $ext = $objFile->extension;
+                    $target_dir = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/assets/images/hide-files';
+                    if (!is_dir($target_dir)) {
+                        mkdir($target_dir);
+                    }
+                    $newsrc = md5($objFile->path) . '.' . $ext;
+                    $abs = $target_dir . '/' . $newsrc;
+                    if (!file_exists($abs) || filemtime($abs) != filemtime($src)) {
+                        $imagick = new \Imagick($src);
+                        $imagick->gaussianBlurImage(80, 25);
+                        $s_height = $imagick->getImageHeight();
+                        $s_width = $imagick->getImageWidth();
+                        if ($watermarkFile) {
+                            $watermark = new \Imagick($watermarkFile);
+                            $w_height = $watermark->getImageHeight();
+                            $w_width = $watermark->getImageWidth();
+                            if ($s_height > $s_width) {
+                                $n_width = $s_width / 2;
+                                $n_height = $n_width * $w_height / $w_width;
+                                $n_pos_x = $s_width / 4;
+                                $n_pos_y = $s_height / 2 - $n_height / 2;
+                            } else {
+                                $n_height = $s_height / 2;
+                                $n_width = $w_width * $n_height / $w_height;
+                                $n_pos_x = $s_width / 2 - $n_width / 2;
+                                $n_pos_y = $s_height / 4;
+                            }
+                            $watermark->resizeImage($n_width, $n_height, \Imagick::FILTER_LANCZOS, 1);
+                            $imagick->compositeImage($watermark, \Imagick::COMPOSITE_DEFAULT, $n_pos_x, $n_pos_y);
                         }
-                        $watermark->resizeImage($n_width, $n_height, \Imagick::FILTER_LANCZOS, 1);
-                        $imagick->compositeImage($watermark, \Imagick::COMPOSITE_DEFAULT, $n_pos_x, $n_pos_y);
+                        $imagick->flattenImages();
+                        file_put_contents($abs, $imagick->getImageBlob());
+                        touch($abs, filemtime($src));
+                        $imagick->destroy();
+                        if ($watermarkFile) {
+                            $watermark->destroy();
+                        }
                     }
-                    $imagick->flattenImages();
-                    file_put_contents($abs, $imagick->getImageBlob());
-                    touch($abs, filemtime($src));
-                    $imagick->destroy();
-                    if ($watermarkFile) {
-                        $watermark->destroy();
-                    }
+                    return 'assets/images/hide-files/' . $newsrc;
                 }
-                return 'assets/images/hide-files/' . $newsrc;
+                catch (\Exception $e) {
+                    return false;
+                    //throw new \Exception('Unable to process ' . $src);
+                }
             } else {
                 return false;
             }

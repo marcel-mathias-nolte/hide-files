@@ -12,8 +12,8 @@
 
 namespace MarcelMathiasNolte\ContaoHideFilesBundle;
 
-use \Contao\CoreBundle\Exception\PageNotFoundException;
-use \Contao\Model\Collection;
+use Contao\CoreBundle\Exception\PageNotFoundException;
+use Contao\Model\Collection;
 
 /**
  * Front end content element "gallery".
