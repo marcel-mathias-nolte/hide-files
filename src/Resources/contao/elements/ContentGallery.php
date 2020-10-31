@@ -73,80 +73,6 @@ class ContentGallery extends \Contao\ContentElement
         return parent::generate();
     }
 
-    protected function getNewSrc($objFile) {
-        static $hideMode;
-        static $watermarkFile;
-        if (!$hideMode) {
-            global $objPage;
-            $objRootPage = \Contao\PageModel::findByPk($objPage->rootId);
-            $hideMode = $objRootPage != null && $objRootPage->mmn_hide_files_mode != '' ? $objRootPage->mmn_hide_files_mode : 'hide';
-            if ($objRootPage->mmn_hide_files_overlay_custom) {
-                $objWatermarkFile = \Contao\FilesModel::findByUuid($objRootPage->mmn_hide_files_overlay_image);
-                if ($objWatermarkFile != null) {
-                    $watermarkFile = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/' . $objWatermarkFile->path;
-                    if (!file_exists($watermarkFile)) {
-                        $watermarkFile = __DIR__ . '/../assets/lock.png';
-                    }
-                } else {
-                    $watermarkFile = __DIR__ . '/../assets/lock.png';
-                }
-            }
-            elseif ($objRootPage->mmn_hide_files_overlay_none) {
-                $watermarkFile = '';
-            }
-            else {
-                $watermarkFile = __DIR__ . '/../assets/lock.png';
-            }
-        }
-        if (!FE_USER_LOGGED_IN && $objFile->hidden) {
-            if ($hideMode == 'blur' && extension_loaded('imagick')) {
-                set_time_limit(0);
-                $src = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/' . $objFile->path;
-                $ext = $objFile->extension;
-                $target_dir = \Contao\System::getContainer()->getParameter('kernel.project_dir') . '/assets/images/hide-files';
-                if (!is_dir($target_dir)) {
-                    mkdir($target_dir);
-                }
-                $newsrc = md5($objFile->path) . '.' . $ext;
-                $abs = $target_dir . '/' . $newsrc;
-                if (!file_exists($abs) || filemtime($abs) != filemtime($src)) {
-                    $imagick = new \Imagick($src);
-                    $imagick->gaussianBlurImage(80, 25);
-                    $s_height = $imagick->getImageHeight();
-                    $s_width = $imagick->getImageWidth();
-                    if ($watermarkFile) {
-                        $watermark = new \Imagick($watermarkFile);
-                        $w_height = $watermark->getImageHeight();
-                        $w_width = $watermark->getImageWidth();
-                        if ($s_height > $s_width) {
-                            $n_width = $s_width / 2;
-                            $n_height = $n_width * $w_height / $w_width;
-                            $n_pos_x = $s_width / 4;
-                            $n_pos_y = $s_height / 2 - $n_height / 2;
-                        } else {
-                            $n_height = $s_height / 2;
-                            $n_width = $w_width * $n_height / $w_height;
-                            $n_pos_x = $s_width / 2 - $n_width / 2;
-                            $n_pos_y = $s_height / 4;
-                        }
-                        $watermark->resizeImage($n_width, $n_height, \Imagick::FILTER_LANCZOS, 1);
-                        $imagick->compositeImage($watermark, \Imagick::COMPOSITE_DEFAULT, $n_pos_x, $n_pos_y);
-                    }
-                    $imagick->flattenImages();
-                    file_put_contents($abs, $imagick->getImageBlob());
-                    $imagick->destroy();
-                    if ($watermarkFile) {
-                        $watermark->destroy();
-                    }
-                }
-                return 'assets/images/hide-files/' . $newsrc;
-            } else {
-                return false;
-            }
-        }
-        return $objFile->path;
-    }
-
     /**
      * Generate the content element
      */
@@ -168,7 +94,7 @@ class ContentGallery extends \Contao\ContentElement
             // Single files
             if ($objFiles->type == 'file')
             {
-                $newPath = $this->getNewSrc($objFiles);;
+                $newPath = DcaCallbacks::getBlurredSrc($objFiles);
                 if (!$newPath) {
                     continue;
                 } elseif ($newPath != $objFiles->path) {
@@ -214,7 +140,7 @@ class ContentGallery extends \Contao\ContentElement
                         continue;
                     }
 
-                    $newPath = $this->getNewSrc($objSubfiles);;
+                    $newPath = DcaCallbacks::getBlurredSrc($objSubfiles);;
                     if (!$newPath) {
                         continue;
                     } elseif ($newPath != $objSubfiles->path) {

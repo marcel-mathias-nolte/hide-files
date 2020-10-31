@@ -50,6 +50,13 @@ class ContentImage extends \Contao\ContentElement
 			return '';
 		}
 
+        $newPath = DcaCallbacks::getBlurredSrc($objFile);
+        if (!$newPath) {
+            return '';
+        } elseif ($newPath != $objFile->path) {
+            $objFile->path = $newPath;
+        }
+
 		$this->singleSRC = $objFile->path;
 		$this->objFilesModel = $objFile;
 
