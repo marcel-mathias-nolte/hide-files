@@ -24,58 +24,7 @@ if (!function_exists('mmn_insert_after')) {
 }
 
 // Content elements
-mmn_insert_after($GLOBALS['TL_CTE']['files'], 'download', 'mmn_download', 'MarcelMathiasNolte\ContaoHideFilesBundle\ContentDownload');
-mmn_insert_after($GLOBALS['TL_CTE']['files'], 'downloads', 'mmn_downloads', 'MarcelMathiasNolte\ContaoHideFilesBundle\ContentDownloads');
-mmn_insert_after($GLOBALS['TL_CTE']['media'], 'image', 'mmn_image', 'MarcelMathiasNolte\ContaoHideFilesBundle\ContentImage');
-mmn_insert_after($GLOBALS['TL_CTE']['media'], 'gallery', 'mmn_gallery', 'MarcelMathiasNolte\ContaoHideFilesBundle\ContentGallery');
-
-/*
-(
-    'texts' => array
-    (
-        'headline'        => 'Contao\ContentHeadline',
-        'text'            => 'Contao\ContentText',
-        'html'            => 'Contao\ContentHtml',
-        'list'            => 'Contao\ContentList',
-        'table'           => 'Contao\ContentTable',
-        'code'            => 'Contao\ContentCode',
-        'markdown'        => 'Contao\ContentMarkdown'
-    ),
-    'accordion' => array
-    (
-        'accordionSingle' => 'Contao\ContentAccordion',
-        'accordionStart'  => 'Contao\ContentAccordionStart',
-        'accordionStop'   => 'Contao\ContentAccordionStop'
-    ),
-    'slider' => array
-    (
-        'sliderStart'     => 'Contao\ContentSliderStart',
-        'sliderStop'      => 'Contao\ContentSliderStop'
-    ),
-    'links' => array
-    (
-        'hyperlink'       => 'Contao\ContentHyperlink',
-        'toplink'         => 'Contao\ContentToplink'
-    ),
-    'media' => array
-    (
-        'image'           => 'Contao\ContentImage',
-        'gallery'         => 'Contao\ContentGallery',
-        'player'          => 'Contao\ContentMedia',
-        'youtube'         => 'Contao\ContentYouTube',
-        'vimeo'           => 'Contao\ContentVimeo'
-    ),
-    'files' => array
-    (
-        'download'        => 'Contao\ContentDownload',
-        'downloads'       => 'Contao\ContentDownloads'
-    ),
-    'includes' => array
-    (
-        'article'         => 'Contao\ContentArticle',
-        'alias'           => 'Contao\ContentAlias',
-        'form'            => 'Contao\Form',
-        'module'          => 'Contao\ContentModule',
-        'teaser'          => 'Contao\ContentTeaser'
-    )
-); */
+mmn_insert_after($GLOBALS['TL_CTE']['files'], 'download', 'mmn_download', 'MarcelMathiasNolte\ContaoHideFilesBundle\Elements\ContentDownload');
+mmn_insert_after($GLOBALS['TL_CTE']['files'], 'downloads', 'mmn_downloads', 'MarcelMathiasNolte\ContaoHideFilesBundle\Elements\ContentDownloads');
+mmn_insert_after($GLOBALS['TL_CTE']['media'], 'image', 'mmn_image', 'MarcelMathiasNolte\ContaoHideFilesBundle\Elements\ContentImage');
+mmn_insert_after($GLOBALS['TL_CTE']['media'], 'gallery', 'mmn_gallery', 'MarcelMathiasNolte\ContaoHideFilesBundle\Elements\ContentGallery');

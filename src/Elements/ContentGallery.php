@@ -10,7 +10,7 @@
  * @license   LGPL-3.0-or-later
  */
 
-namespace MarcelMathiasNolte\ContaoHideFilesBundle;
+namespace MarcelMathiasNolte\ContaoHideFilesBundle\Elements;
 
 use Contao\CoreBundle\Exception\PageNotFoundException;
 use Contao\Model\Collection;
