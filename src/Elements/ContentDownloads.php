@@ -80,7 +80,11 @@ class ContentDownloads extends \Contao\ContentElement
 				if ($file == $this->objFiles->path || \dirname($file) == $this->objFiles->path)
 				{
                     $objFile = \Contao\FilesModel::findByPath($file);
-                    if (!FE_USER_LOGGED_IN && $objFile->hidden) {
+                    $member = FE_USER_LOGGED_IN ? \FrontendUser::getInstance() : false;
+                    $showFsk18 = $member && $member->isMemberOf(6);
+                    $showSexual = $member && $member->isMemberOf(7);
+                    if ((!$showSexual && $this->objFiles->fsk == 'erotic') || (!$showFsk18 && $this->objFiles->fsk == 'porn'))
+                    {
                         throw new \Contao\CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
                         return '';
                     }

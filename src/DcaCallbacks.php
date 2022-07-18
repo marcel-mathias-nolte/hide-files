@@ -44,12 +44,12 @@ class DcaCallbacks extends \Contao\Backend
 
         if ($row['type'] == 'folder') return '';
 
-        $href .= '&amp;id=' . \Contao\Input::get('id') . '&amp;cid=' . urlencode($row['id']) . '&amp;state=' . $row['hidden'];
+        $href .= '&amp;id=' . \Contao\Input::get('id') . '&amp;cid=' . urlencode($row['id']) . '&amp;state=' . ($row['hidden']??'');
         $visible = $this->Database->prepare("SELECT hidden FROM tl_files WHERE path = ?")->execute(html_entity_decode(urldecode($row['id'])))->next()->hidden;
         $icon = $visible ? 'invisible.svg' : 'visible.svg';
 
 
-        return '<a href="' . $this->addToUrl($href) . '" title="' . \Contao\StringUtil::specialchars($title) . '" data-tid="cid"' . $attributes . '>' . \Contao\Image::getHtml($icon, $label, 'data-state="' . ($row['hidden'] ? 0 : 1) . '"') . '</a> ';
+        return '<a href="' . $this->addToUrl($href) . '" title="' . \Contao\StringUtil::specialchars($title) . '" data-tid="cid"' . $attributes . '>' . \Contao\Image::getHtml($icon, $label, 'data-state="' . (isset($row['hidden']) && $row['hidden'] ? 0 : 1) . '"') . '</a> ';
     }
 
     public function toggleVisibility($intId, $blnVisible, \Contao\DataContainer $dc=null)

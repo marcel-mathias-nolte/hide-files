@@ -115,8 +115,7 @@ class ContentGallery extends \Contao\ContentElement
                     'uuid'       => $objFiles->uuid,
                     'name'       => $objFile->basename,
                     'singleSRC'  => $objFiles->path,
-                    'filesModel' => $objFiles->current(),
-                    'isHidden'   => !FE_USER_LOGGED_IN && $objFiles->hidden
+                    'filesModel' => $objFiles->current()
                 );
 
                 $auxDate[] = $objFile->mtime;
@@ -161,8 +160,7 @@ class ContentGallery extends \Contao\ContentElement
                         'uuid'       => $objSubfiles->uuid,
                         'name'       => $objFile->basename,
                         'singleSRC'  => $objSubfiles->path,
-                        'filesModel' => $objSubfiles->current(),
-                        'isHidden'   => !FE_USER_LOGGED_IN && $objSubfiles->hidden
+                        'filesModel' => $objSubfiles->current()
                     );
 
                     $auxDate[] = $objFile->mtime;
@@ -321,9 +319,6 @@ class ContentGallery extends \Contao\ContentElement
                     $images[($i+$j)]['fullsize'] = $this->fullsize;
 
                     $this->addImageToTemplate($objCell, $images[($i+$j)], null, $strLightboxId, $images[($i+$j)]['filesModel']);
-                    if ($images[($i+$j)]['isHidden']) {
-                        $objCell->href = $objCell->imageHref = '{{link_url::login}}';
-                    }
 
                     // Add column width and class
                     $objCell->colWidth = $colwidth . '%';

@@ -69,7 +69,11 @@ class ContentDownload extends \Contao\ContentElement
 			if ($file == $objFile->path)
 			{
 
-                if (!FE_USER_LOGGED_IN && $objFile->hidden) {
+                $member = FE_USER_LOGGED_IN ? \FrontendUser::getInstance() : false;
+                $showFsk18 = $member && $member->isMemberOf(6);
+                $showSexual = $member && $member->isMemberOf(7);
+                if ((!$showSexual && $this->objFile->fsk == 'erotic') || (!$showFsk18 && $this->objFile->fsk == 'porn'))
+                {
                     throw new \Contao\CoreBundle\Exception\AccessDeniedException('Page access denied:  ' . \Environment::get('uri'));
                     return '';
                 }
