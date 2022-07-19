@@ -36,6 +36,7 @@ class DcaCallbacks extends \Contao\Backend
 
     public function toggleIcon($row, $href, $label, $title, $icon, $attributes)
     {
+        if(!isset($row['hidden'])) return '';
         if (\Contao\Input::get('cid'))
         {
             $this->toggleVisibility(\Contao\Input::get('cid'), (\Contao\Input::get('state') == 1), (@func_get_arg(12) ?: null));
